@@ -1,0 +1,6 @@
+{"platform":"soundcloud","assetId":"test001","accountId":1,"status":"error","error":"ENOENT: no such file or directory, open '/config/platforms.json'","timestamp":"2025-10-11T09:19:51.610Z"}
+{"platform":"soundcloud","assetId":"test001","accountId":1,"status":"error","timestamp":"2025-10-11T10:15:45.502Z"}
+{"platform":"soundcloud","assetId":"test001","accountId":1,"status":"error","timestamp":"2025-10-11T10:33:42.863Z"}
+{"platform":"soundcloud","assetId":"test001","accountId":1,"status":"error","timestamp":"2025-10-11T11:40:15.320Z"}
+{"platform":"soundcloud","assetId":"test001","accountId":1,"status":"ok","timestamp":"2025-10-11T12:08:05.620Z"}
+{"platform":"soundcloud","assetId":"test001","accountId":1,"status":"ok","timestamp":"2025-10-11T21:50:04.819Z"}

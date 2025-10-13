@@ -1,0 +1,168 @@
+services:
+  mongo:
+    image: mongo:4.4.7
+    container_name: mongo_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo_data:/data/db
+    restart: always
+
+  ingestion:
+    build: ./services/ingestion-service
+    container_name: ingestion_service
+    env_file:
+      - .env.ingestion
+    environment:
+      - MONGO_URI=mongodb://mongo_db:27017/podcastdb
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    depends_on:
+      - mongo
+    restart: unless-stopped
+
+  normalization:
+    build: ./services/normalization-service
+    container_name: normalization_service
+    env_file:
+      - .env.normalization
+    environment:
+      - MONGO_URI=mongodb://mongo_db:27017/podcastdb
+    ports:
+      - "5008:5008"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    depends_on:
+      - mongo
+      - ingestion
+    restart: unless-stopped
+
+  dashboard-relay:
+    build: ./services/dashboard-relay
+    container_name: dashboard_relay
+    env_file:
+      - .env.dashboard
+    environment:
+      - MONGO_URI=mongodb://mongo_db:27017/podcastdb
+    ports:
+      - "5010:5010"
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      - mongo
+      - ingestion
+      - normalization
+    restart: unless-stopped
+
+  spotify:
+    build: ./services/spotify-service
+    container_name: spotify_service
+    env_file:
+      - .env.spotify
+    ports:
+      - "5001:5001"
+    depends_on:
+      - dashboard-relay
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    restart: unless-stopped
+
+  soundcloud:
+    build: ./services/soundcloud-service
+    container_name: soundcloud_service
+    env_file:
+      - .env.soundcloud
+    ports:
+      - "5002:5002"
+    depends_on:
+      - dashboard-relay
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    restart: unless-stopped
+
+  audiomack:
+    build: ./services/audiomack-service
+    container_name: audiomack_service
+    env_file:
+      - .env.audiomack
+    environment:
+      - NODE_ENV=production
+      - BACKEND_PORT=5004
+      - AUDIOMACK_MODE=${AUDIOMACK_MODE:-demo}
+      - SMTP_HOST=smtp.hostinger.com
+      - SMTP_PORT=465
+      - SMTP_SECURE=true
+      - SMTP_USER=connect@chillnova.online
+      - SMTP_PASS=Sydney!2026#
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+      - ./config:/app/config
+    ports:
+      - "5004:5004"
+    depends_on:
+      - dashboard-relay
+    restart: unless-stopped
+
+  apple:
+    build: ./services/apple-service
+    container_name: apple_service
+    env_file:
+      - .env.apple
+    ports:
+      - "5005:5005"
+    depends_on:
+      - dashboard-relay
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    restart: unless-stopped
+
+  monetization:
+    build: ./services/monetization-service
+    container_name: monetization_service
+    env_file:
+      - .env.monetization
+    ports:
+      - "5006:5006"
+    depends_on:
+      - dashboard-relay
+    volumes:
+      - ./config:/app/config
+      - ./logs:/app/logs
+    restart: unless-stopped
+
+  visual:
+    build: ./services/visual-service
+    container_name: visual_service
+    env_file:
+      - .env.visual
+    ports:
+      - "5007:5007"
+    depends_on:
+      - dashboard-relay
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    restart: unless-stopped
+
+  vault:
+    build: ./services/vault-service
+    container_name: vault_service
+    env_file:
+      - .env.vault
+    ports:
+      - "5009:5009"
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+
+networks:
+  default:
+    driver: bridge

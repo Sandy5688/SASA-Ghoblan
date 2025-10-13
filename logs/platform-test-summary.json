@@ -1,0 +1,24 @@
+{
+  "results": [
+    {
+      "platform": "Spotify",
+      "status": "error",
+      "error": "request to http://spotify:5001/upload failed, reason: getaddrinfo EAI_AGAIN spotify"
+    },
+    {
+      "platform": "SoundCloud",
+      "status": "error",
+      "error": "request to http://soundcloud:5002/upload failed, reason: getaddrinfo EAI_AGAIN soundcloud"
+    },
+    {
+      "platform": "Audiomack",
+      "status": "ok"
+    },
+    {
+      "platform": "Apple",
+      "status": "error",
+      "http": 400
+    }
+  ],
+  "timestamp": "2025-10-12T16:21:18.778Z"
+}

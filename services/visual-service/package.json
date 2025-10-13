@@ -1,0 +1,23 @@
+{
+  "name": "visual-service",
+  "version": "1.0.0",
+  "description": "Visual microservice: AI cover art, seasonal thumbnails, overlays",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "dotenv": "^16.3.0",
+    "cors": "^2.8.5",
+    "fs-extra": "^11.2.0",
+    "morgan": "^1.10.0",
+    "uuid": "^9.0.0",
+    "moment": "^2.30.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

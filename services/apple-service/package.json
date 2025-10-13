@@ -1,0 +1,25 @@
+{
+  "name": "apple-service",
+  "version": "1.0.0",
+  "description": "Apple Music / Apple Podcasts RSS management service",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "axios": "^1.12.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.0",
+    "express": "^4.18.2",
+    "fs-extra": "^11.2.0",
+    "morgan": "^1.10.0",
+    "rss": "^1.2.2",
+    "xml2js": "^0.5.0",
+    "xmlbuilder2": "^3.1.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

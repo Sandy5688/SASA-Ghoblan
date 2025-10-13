@@ -1,0 +1,10 @@
+{"platform":"spotify","assetId":"test001","accountId":1,"status":"ok","timestamp":"2025-10-11T09:19:51.107Z"}
+{"platform":"spotify","assetId":"test001","accountId":1,"status":"ok","timestamp":"2025-10-11T10:33:37.038Z"}
+{"platform":"spotify","assetId":"test001","accountId":1,"status":"ok","timestamp":"2025-10-11T11:40:14.253Z"}
+{"platform":"spotify","assetId":"test001","accountId":1,"status":"ok","timestamp":"2025-10-11T12:08:04.822Z"}
+{"platform":"spotify","assetId":"test001","accountId":1,"status":"ok","timestamp":"2025-10-11T21:49:56.158Z"}
+2025-10-13T04:59:52.378Z | track_demo_001 | Account 1 | Result: error
+{"platform":"spotify","assetId":"demo_track_001","accountId":1,"status":"error","error":"ENOENT: no such file or directory, open '/config/platforms.json'","timestamp":"2025-10-13T06:07:41.876Z"}
+{"platform":"spotify","status":"error","error":"ENOENT: no such file or directory, open '/config/platforms.json'","timestamp":"2025-10-13T06:07:55.131Z"}
+{"platform":"spotify","assetId":"demo_track_001","accountId":1,"status":"error","error":"ENOENT: no such file or directory, open '/app/config/platforms.json'","timestamp":"2025-10-13T07:08:16.018Z"}
+{"platform":"spotify","status":"error","error":"ENOENT: no such file or directory, open '/app/config/platforms.json'","timestamp":"2025-10-13T07:08:45.453Z"}

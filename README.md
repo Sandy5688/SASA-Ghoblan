@@ -1,7 +1,3 @@
-You can also help me add it to the readme "Podcast Project README
-
-
-
 Overview
 
 

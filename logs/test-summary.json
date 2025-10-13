@@ -1,0 +1,66 @@
+{
+  "timestamp": "2025-10-11T13:03:26.513Z",
+  "overall_status": "healthy",
+  "details": {
+    "ingestion": {
+      "name": "ingestion",
+      "status": "healthy",
+      "code": 200,
+      "message": "{\"status\":\"ok\"}"
+    },
+    "normalization": {
+      "name": "normalization",
+      "status": "healthy",
+      "code": 200,
+      "message": "OK"
+    },
+    "dashboard": {
+      "name": "dashboard",
+      "status": "healthy",
+      "code": 200,
+      "message": "OK"
+    },
+    "spotify": {
+      "name": "spotify",
+      "status": "healthy",
+      "code": 200,
+      "message": "OK"
+    },
+    "soundcloud": {
+      "name": "soundcloud",
+      "status": "healthy",
+      "code": 200,
+      "message": "OK"
+    },
+    "apple": {
+      "name": "apple",
+      "status": "healthy",
+      "code": 200,
+      "message": "OK"
+    },
+    "audiomack": {
+      "name": "audiomack",
+      "status": "healthy",
+      "code": 200,
+      "message": "OK"
+    },
+    "monetization": {
+      "name": "monetization",
+      "status": "healthy",
+      "code": 200,
+      "message": "OK"
+    },
+    "visual": {
+      "name": "visual",
+      "status": "healthy",
+      "code": 200,
+      "message": "OK"
+    },
+    "vault": {
+      "name": "vault",
+      "status": "healthy",
+      "code": 200,
+      "message": "{\"ok\":true,\"vault\":{\"enabled\":true,\"error\":\"connect ECONNREFUSED 127.0.0.1:8200\"}}"
+    }
+  }
+}

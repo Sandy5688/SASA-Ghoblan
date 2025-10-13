@@ -1,0 +1,41 @@
+{
+  "rotationIntervalMinutes": 60,
+  "affiliateSlots": [
+    {
+      "id": "affiliate_slot_1",
+      "link": "https://example.com/study-kit?utm_source=spotify",
+      "regionRules": ["US", "EU"],
+      "timeRules": ["morning", "afternoon"],
+      "enabled": true,
+      "description": "Study Kit bundle"
+    },
+    {
+      "id": "affiliate_slot_2",
+      "link": "https://example.com/night-drive?utm_source=soundcloud",
+      "regionRules": ["US", "APAC"],
+      "timeRules": ["evening", "night"],
+      "enabled": true,
+      "description": "Night Drive pack"
+    }
+  ],
+  "sponsorPacks": [
+    {
+      "id": "sponsor_pack_1",
+      "name": "Patreon Supporter Banner",
+      "image": "https://cdn.example.com/banners/patreon.png",
+      "type": "supporter",
+      "enabled": true
+    },
+    {
+      "id": "sponsor_pack_2",
+      "name": "Seasonal Merch Drop",
+      "image": "https://cdn.example.com/banners/merch.png",
+      "type": "merch",
+      "enabled": true
+    }
+  ],
+  "fallback": {
+    "link": "https://example.com/default-affiliate",
+    "description": "Default affiliate link used when others are disabled."
+  }
+}

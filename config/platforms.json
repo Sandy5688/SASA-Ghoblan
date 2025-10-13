@@ -1,0 +1,6 @@
+{
+  "audiomack": { "enabled": true },
+  "spotify": { "enabled": true },
+  "apple": { "enabled": true },
+  "soundcloud": { "enabled": true }
+}

@@ -1,0 +1,23 @@
+{
+  "type": "module",
+  "name": "podcast_project",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "docker compose up",
+    "start:detached": "docker compose up -d",
+    "stop": "docker compose down",
+    "restart": "docker compose down && docker compose up -d",
+    "status": "node scripts/status-check.js",
+    "test:integration": "node scripts/integration-test.js",
+    "logs": "docker compose logs --tail=50 -f"
+  },
+  "dependencies": {
+    "fs-extra": "^11.3.2",
+    "install": "^0.13.0",
+    "mongodb": "^6.20.0",
+    "node-fetch": "^3.3.2",
+    "npx": "^10.2.2",
+    "playwright": "^1.56.0"
+  }
+}
