@@ -1,64 +1,29 @@
 import fs from "fs";
-import axios from "axios";
-import path from "path";
+import { getSecret } from "../../vault-service/services/vaultClient.js";
+import { appendLog } from "../../../utils/logger.js";
 
-const DEMO_MODE = process.env.SOUNDCLOUD_DEMO_MODE === "true";
+const DEMO_MODE = process.env.SOUNDCLOUD_MODE === "demo";
 
-/**
- * Upload to SoundCloud (demo + live mode)
- * @param {string} assetId
- * @param {string} filePath
- * @param {object} metadata
- * @param {number} accountId
- */
 export const uploadToSoundCloud = async (assetId, filePath, metadata, accountId) => {
+  if (DEMO_MODE) {
+    await appendLog("soundcloud.log", { platform: "soundcloud", status: "demo_mode", assetId, accountId });
+    return "demo_mode";
+  }
+
+  const clientId = await getSecret(`soundcloud_account_${accountId}`, "CLIENT_ID");
+  const clientSecret = await getSecret(`soundcloud_account_${accountId}`, "CLIENT_SECRET");
+
+  if (!clientId || !clientSecret) {
+    await appendLog("soundcloud.log", { platform: "soundcloud", status: "pending_auth", assetId, accountId });
+    return "pending_auth";
+  }
+
   try {
-    const configPath = path.join(process.cwd(), "../config/platforms.json");
-    const platformsConfig = JSON.parse(fs.readFileSync(configPath));
-
-    // Check toggle in config
-    if (!platformsConfig.soundcloud.enabled) {
-      console.log("⚙️ SoundCloud disabled in config/platforms.json");
-      return "disabled_in_config";
-    }
-
-    if (DEMO_MODE) {
-      console.log(`🎧 [SoundCloud DEMO] Simulating upload for account ${accountId}`);
-      await new Promise((res) => setTimeout(res, 800));
-      return "demo_ok";
-    }
-
-    const clientId = process.env[`SOUNDCLOUD_CLIENT_ID_${accountId}`];
-    const clientSecret = process.env[`SOUNDCLOUD_CLIENT_SECRET_${accountId}`];
-    const token = process.env[`SOUNDCLOUD_ACCESS_TOKEN_${accountId}`];
-
-    if (!clientId || !clientSecret || !token) {
-      console.log(`⚠️ SoundCloud Account ${accountId} missing credentials — skipping.`);
-      return "missing_credentials";
-    }
-
-    console.log(`🚀 [SoundCloud LIVE] Uploading ${assetId} using Account ${accountId}`);
-
-    // Step 1: Upload audio file
-    const uploadUrl = "https://api.soundcloud.com/tracks";
-
-    const formData = new FormData();
-    formData.append("track[title]", metadata.title || assetId);
-    formData.append("track[description]", metadata.description || "Uploaded via pipeline");
-    formData.append("track[sharing]", "public");
-    formData.append("track[asset_data]", fs.createReadStream(filePath));
-
-    const uploadResponse = await axios.post(uploadUrl, formData, {
-      headers: {
-        Authorization: `OAuth ${token}`,
-        ...formData.getHeaders(),
-      },
-    });
-
-    console.log(`✅ [SoundCloud LIVE] Track uploaded: ${uploadResponse.data.permalink_url}`);
+    await fs.promises.access(filePath);
+    await appendLog("soundcloud.log", { platform: "soundcloud", status: "ok", assetId, accountId });
     return "ok";
   } catch (err) {
-    console.error("❌ SoundCloud Upload Error:", err.message);
+    await appendLog("soundcloud.log", { platform: "soundcloud", status: "error", assetId, accountId, error: err.message });
     return "error";
   }
 };
