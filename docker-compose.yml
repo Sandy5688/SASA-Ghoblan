@@ -95,11 +95,6 @@ services:
       - NODE_ENV=production
       - BACKEND_PORT=5004
       - AUDIOMACK_MODE=${AUDIOMACK_MODE:-demo}
-      - SMTP_HOST=smtp.hostinger.com
-      - SMTP_PORT=465
-      - SMTP_SECURE=true
-      - SMTP_USER=connect@chillnova.online
-      - SMTP_PASS=Sydney!2026#
     volumes:
       - ./uploads:/app/uploads
       - ./logs:/app/logs
@@ -107,6 +102,8 @@ services:
     ports:
       - "5004:5004"
     depends_on:
+      - dashboard-relay
+    restart: unless-stopped
       - dashboard-relay
     restart: unless-stopped
 
