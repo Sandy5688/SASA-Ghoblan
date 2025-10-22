@@ -1,110 +1,79 @@
+// services/audiomack-service/services/audiomackUploader.js
 import { chromium } from "playwright";
 import fs from "fs-extra";
 import path from "path";
 import axios from "axios";
-import { sendAlert } from "./alert.js";
+import { sendAlert } from "./alert.js"; // keep existing alert.js
+import { getSecret } from "../../vault-service/services/vaultClient.js";
+import { appendLog } from "../../../utils/logger.js";
 
 const SESSIONS_DIR = path.join(process.cwd(), "sessions");
-fs.ensureDirSync(SESSIONS_DIR);
+await fs.ensureDir(SESSIONS_DIR);
 
 export const uploadToAudiomack = async (assetId, filePath, metadata, accountId) => {
-  const isDemo = process.env.AUDIOMACK_MODE === "demo";
-  const email = process.env[`AUDIOMACK_EMAIL_${accountId}`];
-  const password = process.env[`AUDIOMACK_PASSWORD_${accountId}`]; // <- fixed
-  const dashboardRelay = process.env.DASHBOARD_RELAY_URL;
+  let platformsConfig = { audiomack: { enabled: true } };
+  try { platformsConfig = await fs.readJson(path.join(process.cwd(), "../config/platforms.json")); } catch {}
 
-  // ---------- DEMO MODE ----------
-  if (isDemo) {
-    console.log(`🧪 Demo mode active — simulating Audiomack upload for asset: ${metadata.title || assetId}`);
+  if (!platformsConfig.audiomack?.enabled) {
+    await appendLog("audiomack.log", { platform: "audiomack", status: "disabled_in_config", assetId, accountId });
+    return "disabled_in_config";
+  }
 
-    await axios.post(dashboardRelay, {  
-      service: "audiomack",  
-      assetId,  
-      status: "demo_upload_simulated",  
-      accountId,  
-      timestamp: new Date().toISOString(),  
-    }).catch(() => {});  
-
+  const mode = (process.env.AUDIOMACK_MODE || "demo").toLowerCase();
+  if (mode === "demo") {
+    await appendLog("audiomack.log", { platform: "audiomack", status: "demo_simulated", assetId, accountId });
     return { platform: "audiomack", status: "demo_simulated", track_id: assetId };
   }
 
-  // ---------- MISSING CREDENTIALS ----------
+  const email = await getSecret(`audiomack_account_${accountId}`, "EMAIL");
+  const password = await getSecret(`audiomack_account_${accountId}`, "PASSWORD");
+
   if (!email || !password) {
-    console.log(`⚠️ Missing Audiomack credentials for Account ${accountId}. Upload skipped.`);
+    await appendLog("audiomack.log", { platform: "audiomack", status: "missing_credentials", assetId, accountId });
     return { platform: "audiomack", status: "missing_credentials", track_id: assetId };
   }
 
-  const sessionFile = path.join(SESSIONS_DIR, `session_${accountId}.json`);
-  let context;
+  if (!(await fs.pathExists(filePath))) {
+    await appendLog("audiomack.log", { platform: "audiomack", status: "file_not_found", assetId, accountId });
+    return { platform: "audiomack", status: "file_not_found", track_id: assetId };
+  }
 
+  const sessionFile = path.join(SESSIONS_DIR, `session_${accountId}_${assetId}.json`);
+  let browser;
   try {
-    const browser = await chromium.launch({ headless: true });
-
-    if (fs.existsSync(sessionFile)) {
-      const storageState = await fs.readJson(sessionFile);
-      context = await browser.newContext({ storageState });
-    } else {
-      context = await browser.newContext();
-    }
-
+    browser = await chromium.launch({ headless: true, args: ["--no-sandbox"] });
+    const context = fs.existsSync(sessionFile) ? await browser.newContext({ storageState: await fs.readJson(sessionFile) }) : await browser.newContext();
     const page = await context.newPage();
 
-    // ---------- LOGIN IF NO SESSION ----------
     if (!fs.existsSync(sessionFile)) {
-      await page.goto("https://www.audiomack.com/login");
-      await page.fill("input[name=email]", email);
-      await page.fill("input[name=password]", password);
-      await page.click("button[type=submit]");
-      await page.waitForTimeout(3000); // allow login
+      await page.goto("https://www.audiomack.com/login", { waitUntil: "domcontentloaded" });
+      await page.waitForSelector('input[name="email"]', { timeout: 10000 });
+      await page.fill('input[name="email"]', email);
+      await page.fill('input[name="password"]', password);
+      await page.click('button[type="submit"]');
+      await page.waitForSelector('a[href="/upload"], .profile', { timeout: 15000 });
       await context.storageState({ path: sessionFile });
     }
 
-    // ---------- UPLOAD ----------
-    await page.goto("https://www.audiomack.com/upload");
+    await page.goto("https://www.audiomack.com/upload", { waitUntil: "domcontentloaded" });
+    await page.waitForSelector('input[type="file"]', { timeout: 10000 });
     await page.setInputFiles('input[type="file"]', filePath);
 
-    await page.fill('input[name="title"]', metadata.title || assetId);
-    await page.fill('textarea[name="description"]', metadata.description || "");
-    if (metadata.genre) await page.selectOption('select[name="genre"]', metadata.genre);
-    if (metadata.tags) await page.fill('input[name="tags"]', metadata.tags.join(", "));
+    if (metadata.title) await page.fill('input[name="title"]', metadata.title);
+    if (metadata.description) await page.fill('textarea[name="description"]', metadata.description);
+    if (metadata.tags && Array.isArray(metadata.tags)) await page.fill('input[name="tags"]', metadata.tags.join(", "));
+    if (metadata.genre) { try { await page.selectOption('select[name="genre"]', metadata.genre); } catch {}
 
     await page.click('button[type="submit"]');
-    await page.waitForTimeout(3000); // allow processing
-
-    await context.storageState({ path: sessionFile }); // refresh session
-    await browser.close();
-
-    // ---------- LOG SUCCESS TO DASHBOARD ----------
-    await axios.post(dashboardRelay, {  
-      service: "audiomack",  
-      assetId,  
-      status: "success",  
-      accountId,  
-      timestamp: new Date().toISOString(),  
-    }).catch(() => {});  
-
-    console.log(`✅ Audiomack upload completed for asset: ${metadata.title || assetId}`);
+    await page.waitForSelector('.upload-success, .upload-complete, text=Upload Complete', { timeout: 20000 }).catch(() => {});
+    await context.storageState({ path: sessionFile });
+    await appendLog("audiomack.log", { platform: "audiomack", status: "success", assetId, accountId });
     return { platform: "audiomack", status: "success", track_id: assetId };
-
   } catch (err) {
-    console.error("❌ Audiomack upload error:", err.message);
-
-    // ---------- SEND ALERT ----------
-    await sendAlert(
-      `Audiomack Upload Failed: Account ${accountId}`,
-      `Asset: ${metadata.title || assetId}\nError: ${err.message}\nTimestamp: ${new Date().toISOString()}`
-    );
-
-    // ---------- LOG ERROR TO DASHBOARD ----------
-    await axios.post(dashboardRelay, {  
-      service: "audiomack",  
-      assetId,  
-      status: "error",  
-      error: err.message,  
-      accountId,  
-      timestamp: new Date().toISOString(),  
-    }).catch(() => {});  
-
-    return { platform: "audiomack", status: "error", error: err.message, track_id: assetId };
+    await appendLog("audiomack.log", { platform: "audiomack", status: "error", assetId, accountId, error: err.message });
+    try { await sendAlert(`Audiomack Upload Failed: ${assetId}`, `Account ${accountId} error: ${err.message}`); } catch {}
+    return { platform: "audiomack", status: "error", error: err.message };
+  } finally {
+    if (browser) try { await browser.close(); } catch {}
   }
 };
