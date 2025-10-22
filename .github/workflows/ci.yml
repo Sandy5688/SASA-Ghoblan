@@ -1,0 +1,31 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: truffleHog scan
+        uses: trufflesecurity/trufflehog-action@v1
+        with:
+          args: --entropy=True .
+
+  build-smoke:
+    runs-on: ubuntu-latest
+    services:
+      docker: {}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build services
+        run: docker-compose -f docker-compose.yml build --pull
+      - name: Start services
+        run: docker-compose -f docker-compose.yml up -d
+      - name: Wait for health
+        run: |
+          for i in {1..15}; do
+            curl -sf http://localhost:5000/health && curl -sf http://localhost:5009/health && exit 0
+            sleep 5
+          done
+          exit 1
